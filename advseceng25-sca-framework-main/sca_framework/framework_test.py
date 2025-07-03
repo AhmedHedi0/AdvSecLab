@@ -40,7 +40,7 @@ class FrameworkTester:
         
         try:
             # Load existing traces
-            traces = self.capture.load_traces("C:/Users/Ahmed/Desktop/AdvSecLab/data/traces_0.npz")
+            traces = self.capture.load_traces(r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\src\py\data\traces_0_processed.npz")
             print(f"✓ Successfully loaded {len(traces)} traces")
             
             # Basic trace validation
@@ -113,9 +113,9 @@ class FrameworkTester:
             cpa_config = AttackConfig(
                 power_model=HammingWeightModel(),
                 target_byte=0,
-                incremental_size=100,
+                incremental_size=10,
                 report_interval=100,
-                max_traces=min(len(traces), 1000)
+                max_traces=2000
             )
             
             print(f"Testing CPA with up to {cpa_config.max_traces} traces...")
@@ -156,9 +156,10 @@ class FrameworkTester:
             dpa_config = AttackConfig(
                 power_model=HammingWeightModel(),
                 target_byte=0,
-                incremental_size=100,
-                report_interval=100,
-                max_traces=min(len(traces), 1000)
+                incremental_size=25,
+                report_interval=25,
+                max_traces=2000
+
             )
             
             print(f"Testing DPA with up to {dpa_config.max_traces} traces...")
@@ -208,9 +209,10 @@ class FrameworkTester:
                 config = AttackConfig(
                     power_model=HammingWeightModel(),
                     target_byte=byte_pos,
-                    incremental_size=200,
-                    report_interval=200,
-                    max_traces=min(len(traces), 500)
+                    incremental_size=25,
+                    report_interval=25,
+                    max_traces=2000
+
                 )
                 
                 attacker = CorrelationPowerAnalysis(config)
@@ -395,7 +397,7 @@ class FrameworkTester:
         print(report_text)
         
         # Save report
-        with open("/home/ubuntu/sca_framework/framework_test_report.txt", "w") as f:
+        with open(r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\framework_test_report.txt", "w", encoding="utf-8") as f:
             f.write(report_text)
         
         print(f"\n✓ Test report saved to framework_test_report.txt")

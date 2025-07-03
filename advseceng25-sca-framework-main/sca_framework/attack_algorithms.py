@@ -26,8 +26,8 @@ class AttackConfig:
     """Configuration for side-channel attacks."""
     power_model: PowerModel
     target_byte: int = 0
-    incremental_size: int = 1000
-    report_interval: int = 500
+    incremental_size: int = 10
+    report_interval: int = 100
     max_traces: Optional[int] = None
 
 class DifferentialPowerAnalysis:
@@ -85,11 +85,10 @@ class DifferentialPowerAnalysis:
         plaintexts = np.array([trace.plaintext for trace in traces])
         
         # Extract target byte from plaintexts
-        plaintext_bytes = []
-        for pt in plaintexts:
-            pt_bytes = list(pt.to_bytes(16, 'big'))
-            plaintext_bytes.append(pt_bytes[target_byte])
-        plaintext_bytes = np.array(plaintext_bytes)
+        plaintext_bytes = np.array([
+    (pt >> (8 * (15 - target_byte))) & 0xFF
+    for pt in plaintexts
+])
         
         num_samples = waves.shape[1]
         num_traces = len(traces)
@@ -106,14 +105,16 @@ class DifferentialPowerAnalysis:
             set_0_indices = []
             set_1_indices = []
             
-            for i, pt_byte in enumerate(plaintext_bytes):
-                selection_bit = self.selection_function(pt_byte, key_guess, bit_position=0)
-                if selection_bit == 0:
-                    set_0_indices.append(i)
-                else:
-                    set_1_indices.append(i)
+            # Vectorized selection using NumPy
+        selection_bits = np.array([
+         self.selection_function(pt_byte, key_guess, bit_position=0)
+         for pt_byte in plaintext_bytes
+     ])
+
+        set_0_indices = np.where(selection_bits == 0)[0]
+        set_1_indices = np.where(selection_bits == 1)[0]
             
-            if len(set_0_indices) > 0 and len(set_1_indices) > 0:
+        if len(set_0_indices) > 0 and len(set_1_indices) > 0:
                 # Compute differential trace
                 mean_0 = np.mean(waves[set_0_indices], axis=0)
                 mean_1 = np.mean(waves[set_1_indices], axis=0)
@@ -121,7 +122,7 @@ class DifferentialPowerAnalysis:
                 
                 # Compute ranking metric (max absolute difference)
                 key_rankings[key_guess] = np.max(np.abs(differential_traces[key_guess]))
-            else:
+        else:
                 logger.warning(f"Unbalanced partition for key guess {key_guess}")
                 key_rankings[key_guess] = 0
         
@@ -191,7 +192,7 @@ class CorrelationPowerAnalysis:
     def __init__(self, config: AttackConfig):
         self.config = config
         self.results_history = []
-    
+        self.early_abort_threshold = getattr(config, 'early_abort_threshold', 0.05)  # default threshold
     def attack_single_byte(self, traces: List[TraceData], 
                           target_byte: int = None) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -237,13 +238,18 @@ class CorrelationPowerAnalysis:
                 self.config.power_model.compute(pt_byte, key_guess) 
                 for pt_byte in plaintext_bytes
             ])
-            
+            max_corr = 0.0            
             # Compute correlation for each sample point
             for sample_idx in range(num_samples):
                 sample_values = waves[:, sample_idx]
                 
                 # Calculate Pearson correlation coefficient
-                correlation = np.corrcoef(sample_values, hyp_power)[0, 1]
+                sample_centered = sample_values - np.mean(sample_values)
+                hyp_centered = hyp_power - np.mean(hyp_power)
+                numerator = np.dot(sample_centered, hyp_centered)
+                denominator = np.linalg.norm(sample_centered) * np.linalg.norm(hyp_centered)
+                correlation = numerator / denominator if denominator != 0 else 0.0
+
                 
                 # Handle NaN values (can occur with constant signals)
                 if np.isnan(correlation):
@@ -251,8 +257,22 @@ class CorrelationPowerAnalysis:
                 
                 correlation_traces[key_guess, sample_idx] = correlation
             
-            # Ranking metric: maximum absolute correlation
-            key_rankings[key_guess] = np.max(np.abs(correlation_traces[key_guess]))
+              # Track max correlation for early elimination
+                if abs(correlation) > max_corr:
+                    max_corr = abs(correlation)
+                
+                # Early abandon if max correlation too low and we are beyond first few samples
+                # (optional optimization: can break early)
+                if max_corr < self.early_abort_threshold and sample_idx > 10:
+                    # Set all correlations to zero for this key guess
+                    correlation_traces[key_guess, :] = 0.0
+                    break
+            
+            # Apply early key guess elimination threshold
+            if max_corr < self.early_abort_threshold:
+                key_rankings[key_guess] = 0.0
+            else:
+                key_rankings[key_guess] = max_corr
         
         logger.info(f"CPA attack completed. Best key guess: {np.argmax(key_rankings)}")
         return correlation_traces, key_rankings
@@ -321,7 +341,7 @@ class FullKeyRecovery:
         self.byte_results = {}
     
     def recover_full_key(self, traces: List[TraceData], 
-                        incremental_size: int = 1000) -> Dict[int, List[AttackResult]]:
+                        incremental_size: int = 25) -> Dict[int, List[AttackResult]]:
         """
         Recover all 16 bytes of the AES key.
         
@@ -394,9 +414,9 @@ def demonstrate_attacks():
     cpa_config = AttackConfig(
         power_model=HammingWeightModel(),
         target_byte=0,
-        incremental_size=100,
+        incremental_size=10,
         report_interval=100,
-        max_traces=500
+        max_traces=2000
     )
     
     cpa_attacker = CorrelationPowerAnalysis(cpa_config)
@@ -414,9 +434,9 @@ def demonstrate_attacks():
     dpa_config = AttackConfig(
         power_model=HammingWeightModel(),
         target_byte=0,
-        incremental_size=100,
+        incremental_size=10,
         report_interval=100,
-        max_traces=500
+        max_traces=2000
     )
     
     dpa_attacker = DifferentialPowerAnalysis(dpa_config)
