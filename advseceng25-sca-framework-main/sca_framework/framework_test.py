@@ -40,7 +40,7 @@ class FrameworkTester:
         
         try:
             # Load existing traces
-            traces = self.capture.load_traces(r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\src\py\data\traces_0_processed.npz")
+            traces = self.capture.load_traces(r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\src\py\data\traces_0_filtered.npz")
             print(f"✓ Successfully loaded {len(traces)} traces")
             
             # Basic trace validation
@@ -111,11 +111,11 @@ class FrameworkTester:
         try:
             # Configure CPA attack
             cpa_config = AttackConfig(
-                power_model=HammingWeightModel(),
+                power_model=HammingDistanceModel(),
                 target_byte=0,
-                incremental_size=10,
-                report_interval=100,
-                max_traces=2000
+                incremental_size=200,
+                report_interval=200,
+                max_traces=10000
             )
             
             print(f"Testing CPA with up to {cpa_config.max_traces} traces...")
@@ -156,9 +156,9 @@ class FrameworkTester:
             dpa_config = AttackConfig(
                 power_model=HammingWeightModel(),
                 target_byte=0,
-                incremental_size=25,
-                report_interval=25,
-                max_traces=2000
+                incremental_size=200,
+                report_interval=200,
+                max_traces=10000
 
             )
             
@@ -209,9 +209,9 @@ class FrameworkTester:
                 config = AttackConfig(
                     power_model=HammingWeightModel(),
                     target_byte=byte_pos,
-                    incremental_size=25,
-                    report_interval=25,
-                    max_traces=2000
+                incremental_size=200,
+                report_interval=200,
+                max_traces=10000
 
                 )
                 
@@ -275,7 +275,7 @@ class FrameworkTester:
             # Test attack progress visualization
             if 'cpa' in self.results:
                 print("✓ Generating CPA progress plots...")
-                correct_key_bytes = list(0x2b7e151628aed2a6abf7158809cf4f3c.to_bytes(16, 'big'))
+                correct_key_bytes = list(0x10a58869d74be5a374cf867cfb473859.to_bytes(16, 'big'))
                 self.visualizer.plot_attack_progress(self.results['cpa'], 
                                                    correct_key_bytes[0],
                                                    "Framework Test - CPA Progress")
@@ -283,7 +283,7 @@ class FrameworkTester:
             # Test attack comparison
             if 'cpa' in self.results and 'dpa' in self.results:
                 print("✓ Generating attack comparison plots...")
-                correct_key_bytes = list(0x2b7e151628aed2a6abf7158809cf4f3c.to_bytes(16, 'big'))
+                correct_key_bytes = list(0x10a58869d74be5a374cf867cfb473859.to_bytes(16, 'big'))
                 self.visualizer.plot_attack_comparison(self.results['cpa'], 
                                                      self.results['dpa'],
                                                      correct_key_bytes[0],
@@ -336,7 +336,7 @@ class FrameworkTester:
         if 'cpa' in self.results:
             cpa = self.results['cpa']
             best_cpa = max(cpa, key=lambda r: r.success_rate)
-            correct_key_byte = 0x2b
+            correct_key_byte = 0x10
             cpa_success = best_cpa.recovered_key[0] == correct_key_byte
             
             report.append(f"CPA Attack Results:")
@@ -351,7 +351,7 @@ class FrameworkTester:
         if 'dpa' in self.results:
             dpa = self.results['dpa']
             best_dpa = max(dpa, key=lambda r: r.success_rate)
-            correct_key_byte = 0x2b
+            correct_key_byte = 0x10
             dpa_success = best_dpa.recovered_key[0] == correct_key_byte
             
             report.append(f"DPA Attack Results:")
@@ -374,7 +374,7 @@ class FrameworkTester:
         # Overall assessment
         overall_success = False
         if 'cpa' in self.results:
-            cpa_success = max(self.results['cpa'], key=lambda r: r.success_rate).recovered_key[0] == 0x2b
+            cpa_success = max(self.results['cpa'], key=lambda r: r.success_rate).recovered_key[0] == 0x10
             overall_success = cpa_success
         
         report.append(f"Overall Framework Assessment:")
@@ -411,7 +411,7 @@ def main():
     print("=" * 60)
     
     # Known key from simulation
-    correct_key = 0x2b7e151628aed2a6abf7158809cf4f3c
+    correct_key = 0x10a58869d74be5a374cf867cfb473859
     correct_key_bytes = list(correct_key.to_bytes(16, 'big'))
     
     # Initialize tester

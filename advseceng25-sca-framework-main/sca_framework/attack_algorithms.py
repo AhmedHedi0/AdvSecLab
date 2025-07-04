@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AttackConfig:
     """Configuration for side-channel attacks."""
-    power_model: PowerModel
+    power_model: HammingWeightModel
     target_byte: int = 0
-    incremental_size: int = 10
+    incremental_size: int = 100
     report_interval: int = 100
     max_traces: Optional[int] = None
 
@@ -341,7 +341,7 @@ class FullKeyRecovery:
         self.byte_results = {}
     
     def recover_full_key(self, traces: List[TraceData], 
-                        incremental_size: int = 25) -> Dict[int, List[AttackResult]]:
+                        incremental_size: int = 100) -> Dict[int, List[AttackResult]]:
         """
         Recover all 16 bytes of the AES key.
         
@@ -397,14 +397,14 @@ def demonstrate_attacks():
     capture = TraceCapture()
     
     try:
-        traces = capture.load_traces("/home/ubuntu/sca_framework/demo_traces.npz")
+        traces = capture.load_traces(r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\src\py\data\traces_0_filtered.npz")
         print(f"Loaded {len(traces)} traces for attack demonstration")
     except Exception as e:
         print(f"Error loading traces: {e}")
         return
     
     # Known key from simulation
-    correct_key = 0x2b7e151628aed2a6abf7158809cf4f3c
+    correct_key = 0x10a5_8869_d74b_e5a3_74cf_867c_fb47_3859
     correct_key_bytes = list(correct_key.to_bytes(16, 'big'))
     
     print(f"Target key byte 0: 0x{correct_key_bytes[0]:02x}")
@@ -414,7 +414,7 @@ def demonstrate_attacks():
     cpa_config = AttackConfig(
         power_model=HammingWeightModel(),
         target_byte=0,
-        incremental_size=10,
+        incremental_size=100,
         report_interval=100,
         max_traces=2000
     )
@@ -434,7 +434,7 @@ def demonstrate_attacks():
     dpa_config = AttackConfig(
         power_model=HammingWeightModel(),
         target_byte=0,
-        incremental_size=10,
+        incremental_size=100,
         report_interval=100,
         max_traces=2000
     )
