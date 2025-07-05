@@ -37,7 +37,7 @@ class FrameworkTester:
         try:
             # Load existing traces
             traces = self.capture.load_traces(
-                r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\src\py\data\traces_1_filtered.npz")
+                r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\src\py\data\traces_1_enhanced.npz")
             print(f"✓ Successfully loaded {len(traces)} traces")
 
             # Basic trace validation
@@ -132,7 +132,7 @@ class FrameworkTester:
             cpa_results = cpa_attacker.incremental_attack(traces, 0)
 
             if cpa_results:
-                best_result = max(cpa_results, key=lambda r: r.success_rate)
+                best_result = best_result = cpa_results[-1]
                 success = best_result.recovered_key[0] == correct_key_byte
 
                 print(
@@ -177,7 +177,7 @@ class FrameworkTester:
             dpa_results = dpa_attacker.incremental_attack(traces, 0)
 
             if dpa_results:
-                best_result = max(dpa_results, key=lambda r: r.success_rate)
+                best_result = dpa_results[-1]
                 success = best_result.recovered_key[0] == correct_key_byte
 
                 print(

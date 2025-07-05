@@ -112,5 +112,5 @@ def demonstrate_snr_analysis(traces: List[TraceData], correct_key: int, byte_ind
 if __name__ == "__main__":
     from sca_framework import TraceCapture
     capture = TraceCapture()
-    traces = capture.load_traces(r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\src\py\data\traces_1_filtered.npz")
+    traces = capture.load_traces(r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\src\py\data\traces_1_enhanced.npz")
     demonstrate_snr_analysis(traces, correct_key=0x2b7e151628aed2a6abf7158809cf4f3c, byte_index=0)
