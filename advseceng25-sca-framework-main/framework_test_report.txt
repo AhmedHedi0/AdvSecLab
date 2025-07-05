@@ -1,6 +1,6 @@
 ChipWhisperer Side-Channel Analysis Framework Test Report
 ============================================================
-Test Date: 2025-07-04 16:05:52
+Test Date: 2025-07-05 03:09:02
 
 Trace Analysis:
   - Total traces: 5000
@@ -8,24 +8,24 @@ Trace Analysis:
   - Data format: NPZ compressed
 
 SNR Analysis:
-  - Max SNR: 0.0423
-  - Mean SNR: 0.0111
-  - Leakage points: 0
+  - Max SNR: 0.0592
+  - Mean SNR: 0.0229
+  - Leakage points: 7
   - Attack feasibility: Low
 
 CPA Attack Results:
-  - Best correlation: 0.2673
-  - Recovered key: 0xfd
+  - Best correlation: 0.1738
+  - Recovered key: 0x3c
   - Correct key: 0x10
   - Success: NO
-  - Traces used: 200
+  - Traces used: 500
 
 DPA Attack Results:
-  - Best ranking: 1.0000
-  - Recovered key: 0xff
+  - Best ranking: 0.0087
+  - Recovered key: 0xe7
   - Correct key: 0x10
   - Success: NO
-  - Traces used: 200
+  - Traces used: 3500
 
 Full Key Recovery:
   - Bytes tested: 2
@@ -44,5 +44,4 @@ Framework Components Tested:
   ✓ DPA attack implementation
   ✓ Incremental processing
   ✓ Multiple power models
-  ✓ Advanced visualizations
   ✓ Full key recovery

@@ -411,8 +411,8 @@ def demonstrate_visualizations():
     capture = TraceCapture()
     
     try:
-        traces = capture.load_traces("/home/ubuntu/sca_framework/demo_traces.npz")
-        print(f"Loaded {len(traces)} traces for visualization demo")
+        traces = capture.load_traces(r"C:\Users\Ahmed\Desktop\AdvSecLab\advseceng25-sca-framework-main\src\py\data\traces_1_filtered.npz")
+        print(f"Loaded {len(traces)} traces for visualization")
     except Exception as e:
         print(f"Error loading traces: {e}")
         return
